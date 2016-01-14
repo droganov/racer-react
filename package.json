@@ -1,0 +1,23 @@
+{
+  "name": "racer-react",
+  "version": "0.0.1",
+  "description": "Racer.js wrapper for React.js which allows to create realtime isomorphic applications with offline support.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "react",
+    "isomorphic",
+    "real-time",
+    "model",
+    "store"
+  ],
+  "author": "Serge Droganov",
+  "license": "MIT",
+  "dependencies": {
+    "racer-highway": "git+https://github.com/droganov/racer-highway.git#patch-2",
+    "react": "^0.14.6",
+    "react-router": "^1.0.3"
+  }
+}
