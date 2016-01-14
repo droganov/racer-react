@@ -9,24 +9,9 @@ module.exports = function ( options ){
             location: options.location
          },
          function( error, redirectLocation, renderProps ){
-            if( error ){
-               return reject( error );
-            }
-            if( redirectLocation ){
-               return reject({
-                  location: redirectLocation,
-                  status: 301
-               });
-            }
-            options.racerModel.bundle( function( error, racerBundle ){
-               if( error ){
-                  return reject( error );
-               }
-               var json = JSON.stringify( racerBundle );
-               resolve(
-                  options.onSuccess( renderProps, json && json.replace(/<\//g, '<\\/') )
-               );
-            });
+            if( error ) return reject( error );
+            if( redirectLocation ) return reject({ location: redirectLocation, status: 301 });
+            resolve( renderProps );
          }
       );
    });
