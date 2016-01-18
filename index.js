@@ -2,11 +2,11 @@
 
 var serverRequire = require("racer/lib/util").serverRequire;
 
-var bundle = serverRequire( module, "./src/bundle" );
-var Connect = require( "./src/connect" );
-var connectClient = require( "./src/connect-client" );
-var match = require( "./src/match" );
-var Provider = require( "./src/provider" );
+var bundle = serverRequire( module, "./lib/bundle" );
+var Connect = require( "./lib/connect" );
+var connectClient = require( "./lib/connect-client" );
+var match = require( "./lib/match" );
+var Provider = require( "./lib/provider" );
 
 module.exports = {
   bundle: bundle,
