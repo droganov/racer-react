@@ -20,6 +20,7 @@
   "author": "Serge Droganov",
   "license": "MIT",
   "dependencies": {
+    "racer": "^0.8.9",
     "racer-highway": "git+https://github.com/droganov/racer-highway.git#patch-2",
     "react": "^0.14.6",
     "react-router": "^1.0.3"
