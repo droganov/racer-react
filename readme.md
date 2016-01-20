@@ -2,7 +2,7 @@
 
 In a few words racer-react allows you to query racer model in declarative way from react-router handlers:
 
-```
+```javascript
 import React, { Component } from "react";
 import { Connect } from "racer-react";
 
