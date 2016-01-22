@@ -9,7 +9,7 @@ import { Connect } from "racer-react";
 class TestPage extends Component {
   static statics = {
     racer: query => {
-      query( "test", {} ).subscribeAs( "testList" );
+      query( "test", {} ).pipeAs( "testList" );
     }
   };
   _submit( ev ){
