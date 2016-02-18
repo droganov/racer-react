@@ -1,6 +1,6 @@
 {
   "name": "racer-react",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "Racer.js wrapper for React.js which allows to create realtime isomorphic applications with offline support.",
   "main": "index.js",
   "scripts": {
@@ -22,7 +22,7 @@
   "dependencies": {
     "racer": "^0.8.9",
     "racer-transport-koa": "0.0.1",
-    "react": "^0.14.3",
-    "react-router": "^1.0.3"
+    "react": "^0.14.7",
+    "react-router": "^2.0.0"
   }
 }
