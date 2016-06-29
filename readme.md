@@ -5,6 +5,7 @@ In a few words racer-react allows you to query racer model in declarative way fr
 ```javascript
 import React, { Component } from "react";
 import { Connect } from "racer-react";
+import { connectRacer } from 'racer-react';
 
 class TestPage extends Component {
   _submit( ev ){
