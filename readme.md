@@ -7,11 +7,6 @@ import React, { Component } from "react";
 import { Connect } from "racer-react";
 
 class TestPage extends Component {
-  static statics = {
-    racer: query => {
-      query( "test", {} ).pipeAs( "testList" );
-    }
-  };
   _submit( ev ){
     ev.preventDefault();
     this.props.racerModel.add( "test", {
@@ -34,7 +29,12 @@ class TestPage extends Component {
     )
   }
 }
-export default Connect( TestPage );
+
+export default connectRacer(
+  query => {
+    query( "test", {} ).pipeAs( "testList" );
+  },
+)(TestPage);
 ```
 Full list of racer features is [here](https://github.com/derbyjs/racer#features).
 
