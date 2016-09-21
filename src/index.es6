@@ -1,13 +1,11 @@
-"use strict"
+const serverRequire = require('racer/lib/util').serverRequire;
 
-const serverRequire = require("racer/lib/util").serverRequire;
+const bundle = serverRequire(module, './bundle');
 
-const bundle = serverRequire( module, "./bundle" );
-
-import connectRacer from './connect';
-import connectClient from './connect-client';
-import match from './match';
-import Provider from './provider';
+import connectRacer from './connect.es6';
+import connectClient from './connect-client.es6';
+import match from './match.es6';
+import Provider from './provider.es6';
 
 export default {
   bundle,
@@ -15,4 +13,4 @@ export default {
   connectClient,
   match,
   Provider,
-}
+};
