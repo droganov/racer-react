@@ -22,14 +22,15 @@ export default (options, cb) => {
       return;
     }
 
-    const queryAggregator = new QueryAggregator(racerModel, renderProps, reduxStore);
-    for (let i = 0; i < renderProps.components.length; i++) {
-      const component = renderProps.components[i];
-      if (component && (typeof component.racer === 'function')) queryAggregator.use(component);
-    }
+    // for (let i = 0; i < renderProps.components.length; i++) {
+    //   const component = renderProps.components[i];
+    //   if (component && (typeof component.fixRenderProps === 'function')) {
+    //     component.fixRenderProps(renderProps);
+    //   }
+    // }
 
-    queryAggregator.run((error) => {
-      cb(error, null, renderProps);
-    });
+
+    cb(null, null, renderProps);
+
   });
 };
