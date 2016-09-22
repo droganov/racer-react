@@ -1,6 +1,6 @@
 import racer from 'racer';
 import transport from 'racer-transport-koa/lib/client';
-import defaults from './defaults.es6';
+import defaults from './defaults';
 
 export default (bundle, options) => {
   const clientOptions = {

@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   channelName: '/racer-channel',
   reconnect: true,
   browserChannelOnly: false,

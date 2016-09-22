@@ -1,11 +1,19 @@
 const serverRequire = require('racer/lib/util').serverRequire;
 
-const bundle = serverRequire(module, './bundle');
+export const bundle = serverRequire(module, './bundle');
 
-import connectRacer from './connect-racer.es6';
-import connectClient from './connect-client.es6';
-import match from './match.es6';
-import Provider from './provider.es6';
+import connectRacer from './connect-racer';
+import connectClient from './connect-client';
+import match from './match';
+import Provider from './provider' ;
+
+export {
+  bundle,
+  connectRacer,
+  connectClient,
+  match,
+  Provider,
+};
 
 export default {
   bundle,

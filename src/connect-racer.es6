@@ -1,11 +1,11 @@
-import React, { PropTypes, Component } from 'react';
+import React, { Component } from 'react';
 
-import QueryHandler from './query-handler.es6';
-import DocHandler from './doc-handler.es6';
-import ModelGet from './model-get.es6';
+import QueryHandler from './query-handler';
+import DocHandler from './doc-handler';
+import ModelGet from './model-get';
 
 
-export default (mapModelToProps, mapDispatchToProps) => Child =>
+export default (mapRemoteToProps, mapSelectToProps, mapDispatchToProps) => Child =>
   class RacerReact extends Component {
     static displayName = 'RacerReact';
 
@@ -17,35 +17,43 @@ export default (mapModelToProps, mapDispatchToProps) => Child =>
       racerModel: React.PropTypes.object.isRequired,
     }
 
-    get id(){
-      return
-        "_" +
-        this._reactInternalInstance._mountOrder +
-        "_" +
-        this._reactInternalInstance._mountIndex;
+    state = {};
+
+    get id() {
+      return;
+      '_' +
+      this._reactInternalInstance._mountOrder +
+      '_' +
+      this._reactInternalInstance._mountIndex;
     }
 
     // react methods
-    getInitialState() {
-      return {}
-    }
     componentWillMount() {
       this.racerModel = this.context.racerModel;
 
       this.scopedModel = this.racerModel.at(this.id);
 
-      const racerQuery = new QueryHandler(ctx.racerModel, queryObj => {
+      const racerQuery = new QueryHandler(this.racerModel, queryData => {
+        // ...
+        return new Promise((resolve, reject)=>{
+          setTimeout(()=> {
+            resolve({[queryData.collection]: 'result of query'});
+            console.log('query '+ queryData.collection + ' resolved ...');
+          },2000);
+        });
+      });
+
+      const racerDoc = new DocHandler(this.racerModel, queryObj => {
         // ...
       });
 
-      const racerDoc = new DocHandler(ctx.racerModel, queryObj => {
-        // ...
+      const modelGet = new ModelGet(this.scopedModel);
+
+      const ctx = this;
+      mapRemoteToProps(racerQuery, racerDoc, modelGet).then(mapRemote => {
+        ctx.mapRemote = mapRemote;
+        console.log('result remote map',mapRemote);
       });
-
-      const modelGet = new ModelGet(ctx.scopedModel);
-
-      this.mapModel = mapModelToProps(racerQuery, racerDoc, modelGet, props);
-
     }
     componentDidMount() {}
     componentWillUpdate() {}
@@ -59,8 +67,8 @@ export default (mapModelToProps, mapDispatchToProps) => Child =>
           ...this.props,
           ...this.state,
           racerModel: this.scopedModel,
-          mapDispatchToProps && mapDispatchToProps(this.dispatch, this.props)
+          ...mapDispatchToProps && mapDispatchToProps(this.dispatch, this.props),
         }
       );
     }
-  }
+  };

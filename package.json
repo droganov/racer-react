@@ -24,6 +24,7 @@
   "author": "Serge Droganov",
   "license": "MIT",
   "dependencies": {
+    "lodash": "^4.16.1",
     "racer": "^0.8.9",
     "racer-transport-koa": "0.0.1",
     "react": "^15.0.1",
@@ -40,6 +41,7 @@
     "eslint-config-airbnb": "^9.0.1",
     "eslint-plugin-import": "^1.8.0",
     "eslint-plugin-jsx-a11y": "^1.2.0",
-    "eslint-plugin-react": "^5.1.1"
+    "eslint-plugin-react": "^5.1.1",
+    "react-dom": "^15.3.2"
   }
 }

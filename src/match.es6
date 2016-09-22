@@ -1,8 +1,6 @@
 import { match } from 'react-router';
 import { isServer } from 'racer/lib/util';
 
-import QueryAggregator from './query-aggregator.es6';
-
 export default (options, cb) => {
   const {
     racerModel,
@@ -31,6 +29,5 @@ export default (options, cb) => {
 
 
     cb(null, null, renderProps);
-
   });
 };

@@ -1,0 +1,5 @@
+export default {
+  SUBSCRIPTION: 'SUBSCRIPTION',
+  OBSERVER: 'OBSERVER',
+  FETCH: 'FETCH',
+};
