@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 
-import QueryHandler from './query-handler';
+import QueryThunk from './query-thunk';
 import DocHandler from './doc-handler';
 import ModelGet from './model-get';
 
@@ -15,32 +15,40 @@ export default (mapRemoteToProps, mapSelectToProps, mapDispatchToProps) => Child
 
     static contextTypes = {
       racerModel: React.PropTypes.object.isRequired,
-    }
+    };
+
+    static statics = {
+      mapRemoteToProps,
+    };
 
     state = {};
 
     get id() {
-      return;
-      '_' +
-      this._reactInternalInstance._mountOrder +
-      '_' +
-      this._reactInternalInstance._mountIndex;
+      return `
+        _${this._reactInternalInstance._mountOrder}
+        _${this._reactInternalInstance._mountIndex}
+      `;
     }
 
     // react methods
-    componentWillMount() {
+    async componentWillMount() {
       this.racerModel = this.context.racerModel;
 
       this.scopedModel = this.racerModel.at(this.id);
 
-      const racerQuery = new QueryHandler(this.racerModel, queryData => {
-        // ...
-        return new Promise((resolve, reject)=>{
+      const ctx = this;
+      const queryThunk = new QueryThunk(this.racerModel, queryData => {
+
+        // имитация обработки fetch, subscribe, observe
+        return new Promise((resolve, reject)=> {
           setTimeout(()=> {
-            resolve({[queryData.collection]: 'result of query'});
+            const qr = {[queryData.collection]: 'result of query'};
+            Object.assign(ctx.racerModel, qr);
+            resolve(qr);
             console.log('query '+ queryData.collection + ' resolved ...');
-          },2000);
+          }, 100+Math.random()*3000);
         });
+
       });
 
       const racerDoc = new DocHandler(this.racerModel, queryObj => {
@@ -49,11 +57,9 @@ export default (mapRemoteToProps, mapSelectToProps, mapDispatchToProps) => Child
 
       const modelGet = new ModelGet(this.scopedModel);
 
-      const ctx = this;
-      mapRemoteToProps(racerQuery, racerDoc, modelGet).then(mapRemote => {
-        ctx.mapRemote = mapRemote;
-        console.log('result remote map',mapRemote);
-      });
+      // this.mapModel =  await mapRemoteToProps(queryThunk, null, null);
+      // console.log(this.mapModel);
+
     }
     componentDidMount() {}
     componentWillUpdate() {}

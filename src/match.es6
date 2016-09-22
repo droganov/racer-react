@@ -1,6 +1,8 @@
 import { match } from 'react-router';
 import { isServer } from 'racer/lib/util';
 
+import QueryThunk from './query-thunk';
+
 export default (options, cb) => {
   const {
     racerModel,
@@ -20,14 +22,45 @@ export default (options, cb) => {
       return;
     }
 
-    // for (let i = 0; i < renderProps.components.length; i++) {
-    //   const component = renderProps.components[i];
-    //   if (component && (typeof component.fixRenderProps === 'function')) {
-    //     component.fixRenderProps(renderProps);
-    //   }
-    // }
+    const promisesStack = [];
 
+    renderProps.components.forEach((component) => {
+      if (!component || (typeof component.statics.mapRemoteToProps !== 'function')) return;
 
-    cb(null, null, renderProps);
+      component.racerQueries = [];
+
+      const queryThunk = new QueryThunk(racerModel, queryObj => {
+        component.racerQueries.push(queryObj);
+
+        // имитация обработки fetch, subscribe, observe
+        return new Promise((resolve, reject)=> {
+          setTimeout(()=> {
+            const qr = {[queryObj.collection]: 'result of query'};
+            Object.assign(racerModel, qr);
+            resolve(qr);
+            console.log('query '+ queryObj.collection + ' resolved ...');
+          }, 100+Math.random()*3000);
+        });
+
+      });
+
+      const remoteMapPromise =
+        component
+          .statics
+          .mapRemoteToProps(queryThunk, null, renderProps) // обработка запросов
+          .then(remoteResult => {
+            component.mapRemoteResult = remoteResult; // сохранение результатов запросов
+          });
+
+      promisesStack.push(remoteMapPromise);
+
+    });
+
+    Promise.all(promisesStack).then(() => {
+      cb(null, null, renderProps);
+    });
+
+    // cb(null, null, renderProps);
+
   });
 };
