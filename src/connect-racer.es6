@@ -31,7 +31,7 @@ export default (mapRemoteToProps, mapSelectToProps, mapDispatchToProps) => Child
     }
 
     // react methods
-    async componentWillMount() {
+    componentWillMount() {
       this.racerModel = this.context.racerModel;
 
       this.scopedModel = this.racerModel.at(this.id);
