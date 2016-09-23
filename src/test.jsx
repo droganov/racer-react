@@ -6,24 +6,27 @@ import { connectRacer, Provider, match } from "../";
 import { renderToStaticMarkup } from 'react-dom/server';
 
 const racerModel = {
-  at: () => ({})
+  at: () => racerModel,
+  get: () => racerModel
 };
 
 
 class App extends Component {
   render() {
-    return <div>result of rendering</div>
+    const { test } = this.props;
+    return <div>result of =={test}==</div>
   }
 }
 
 const mapRemoteToProps = async (query, doc, props) => {
-  console.log('mapRemoteToProps');
+
   try {
-    return {
-      ...await query("{graphql request1 string}").fetchAs("test"),
-      ...await query("{graphql request2 string}").fetchAs("test1"),
-      ...await query("{graphql request3 string}").fetchAs("test2")
-    }
+    const rs = await Promise.all([
+      query("{graphql request1 string}").fetchAs("test"),
+      query("{graphql request2 string}").fetchAs("test1"),
+      query("{graphql request3 string}").fetchAs("test2")
+    ]);
+    return { ...rs[0], ...rs[1], ...rs[2] };
   } catch (e) {
     console.log(e);
   }
@@ -48,5 +51,9 @@ function markup(renderProps) {
 
 match({ racerModel, routes, location: '/' }, (err, redirectLocation, renderProps) => {
   console.log(racerModel);
-  console.log(markup(renderProps));
+  try {
+    console.log(markup(renderProps));
+  } catch(e) {
+    console.log('render error', e);
+  }
 });

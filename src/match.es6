@@ -49,7 +49,7 @@ export default (options, cb) => {
           .statics
           .mapRemoteToProps(queryThunk, null, renderProps) // обработка запросов
           .then(remoteResult => {
-            component.mapRemoteResult = remoteResult; // сохранение результатов запросов
+            component.mapRemoteResult = remoteResult; // сохранение функции гетера данных
           });
 
       promisesStack.push(remoteMapPromise);
@@ -58,9 +58,9 @@ export default (options, cb) => {
 
     Promise.all(promisesStack).then(() => {
       cb(null, null, renderProps);
+    }).catch((error)=> {
+      console.log('prerender error', error);
     });
-
-    // cb(null, null, renderProps);
 
   });
 };

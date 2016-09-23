@@ -57,9 +57,6 @@ export default (mapRemoteToProps, mapSelectToProps, mapDispatchToProps) => Child
 
       const modelGet = new ModelGet(this.scopedModel);
 
-      // this.mapModel =  await mapRemoteToProps(queryThunk, null, null);
-      // console.log(this.mapModel);
-
     }
     componentDidMount() {}
     componentWillUpdate() {}
@@ -72,6 +69,7 @@ export default (mapRemoteToProps, mapSelectToProps, mapDispatchToProps) => Child
           ref: 'self',
           ...this.props,
           ...this.state,
+          ...this.scopedModel.get(), // временно
           racerModel: this.scopedModel,
           ...mapDispatchToProps && mapDispatchToProps(this.dispatch, this.props),
         }
