@@ -42,8 +42,8 @@ export default (mapRemoteToProps, mapSelectToProps, mapDispatchToProps) => Child
         // имитация обработки fetch, subscribe, observe
         return new Promise((resolve, reject)=> {
           setTimeout(()=> {
-            const qr = {[queryData.collection]: 'result of query'};
-            Object.assign(ctx.racerModel, qr);
+            const qr = 'result of query in connect-racer';
+            racerModel.set("_data."+queryData.collection, qr);
             resolve(qr);
             console.log('query '+ queryData.collection + ' resolved ...');
           }, 100+Math.random()*3000);
@@ -51,7 +51,7 @@ export default (mapRemoteToProps, mapSelectToProps, mapDispatchToProps) => Child
 
       });
 
-      const racerDoc = new DocHandler(this.racerModel, queryObj => {
+      const racerDoc = new DocHandler(this.racerModel, queryData => {
         // ...
       });
 

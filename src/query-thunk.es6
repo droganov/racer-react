@@ -7,8 +7,8 @@ export default (racerModel, executeQuery) => {
 
     const sendQuery = (collection, type) => {
 
-      // const query = racerModel.graphQlQuery(graphQlRequest);
-      const query = { graphQlRequest };
+      const query = racerModel.graphQlQuery(graphQlRequest);
+      // const query = { graphQlRequest };
 
       return Promise
         .resolve()

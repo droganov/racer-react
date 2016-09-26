@@ -1,3 +1,5 @@
+import originalRacer from 'racer';
+
 import React, { Component } from 'react';
 import { RouterContext, Route, IndexRoute, browserHistory } from "react-router"
 
@@ -5,15 +7,22 @@ import { connectRacer, Provider, match } from "../";
 
 import { renderToStaticMarkup } from 'react-dom/server';
 
-const racerModel = {
-  at: () => racerModel,
-  get: () => racerModel
-};
+originalRacer.Model.prototype.graphQlQuery = (graphQlRequest) => {
+  console.log('graphQlQuery function in test', graphQlRequest);
+  return {
+    graphQlRequest,
+  };
+}
+
+const racerModel = originalRacer.createModel();
 
 
 class App extends Component {
+  componentWillMount() {
+    this.props.racerModel.graphQlQuery(11);
+  }
   render() {
-    const { test } = this.props;
+    const test = this.props.racerModel.root.get("_data.test");
     return <div>result of =={test}==</div>
   }
 }
@@ -50,7 +59,7 @@ function markup(renderProps) {
 }
 
 match({ racerModel, routes, location: '/' }, (err, redirectLocation, renderProps) => {
-  console.log(racerModel);
+  console.log(racerModel.get());
   try {
     console.log(markup(renderProps));
   } catch(e) {

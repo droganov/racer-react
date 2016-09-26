@@ -35,8 +35,8 @@ export default (options, cb) => {
         // имитация обработки fetch, subscribe, observe
         return new Promise((resolve, reject)=> {
           setTimeout(()=> {
-            const qr = {[queryObj.collection]: 'result of query'};
-            Object.assign(racerModel, qr);
+            const qr = 'result of query in match';
+            racerModel.set("_data."+queryObj.collection, qr);
             resolve(qr);
             console.log('query '+ queryObj.collection + ' resolved ...');
           }, 100+Math.random()*3000);
