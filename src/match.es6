@@ -24,7 +24,7 @@ export default (options, cb) => {
     return Promise.all(
       renderProps.components
         .filter(component => component.statics.mapRemoteToProps === 'function'))
-        .map(component => component.statics.mapRemoteToProps() );
+        .map(component => component.statics.mapRemoteToProps(racerModel) );
     );
 
   });

@@ -6,19 +6,17 @@ import ModelGet from './model-get';
 
 
 export default (mapRemoteToProps, mapSelectToProps, mapDispatchToProps) => Child =>
+  const queryThunk = new QueryThunk();
+
+
   class RacerReact extends Component {
     static displayName = 'RacerReact';
-
-    static propTypes = {
-      racerModel: React.PropTypes.object,
-    };
-
-    static contextTypes = {
-      racerModel: React.PropTypes.object.isRequired,
-    };
-
     static statics = {
-      mapRemoteToProps,
+      mapRemoteToProps: racerModel => {
+        return queryThunk
+          .use(mapRemoteToProps)
+          .with(racerModel);
+      },
     };
 
     state = {};
