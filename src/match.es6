@@ -25,9 +25,9 @@ export default (options, cb) => {
     Promise
       .all(
         renderProps.components
-          .filter(component => component.statics.mapRemoteToProps === 'function')
-          .map(component => component.statics.mapRemoteToProps(racerModel, renderProps));
-        )
+          .filter(component => component && typeof component.statics.mapRemoteToProps === 'function')
+          .map(component => component.statics.mapRemoteToProps(racerModel, renderProps))
+      )
       .then(
         () => cb(null, null, renderProps)
       )

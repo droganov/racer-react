@@ -5,34 +5,25 @@ import DocHandler from './doc-handler';
 import ModelGet from './model-get';
 
 
-export default (mapRemoteToProps, mapSelectToProps, mapDispatchToProps) => Child => {
+const RacerReactWrapper = (mapRemoteToProps, mapSelectToProps, mapDispatchToProps) => Child => {
   const queryThunk = new QueryThunk();
 
-  return class RacerReact extends Component {
+  class RacerReact extends Component {
     static displayName = 'RacerReact';
 
     static statics = {
-      mapRemoteToProps: racerModel => {
-        return queryThunk
-          .use(mapRemoteToProps)
-          .with(racerModel);
-      },
+      mapRemoteToProps: racerModel => queryThunk
+        .use(mapRemoteToProps)
+        .with(racerModel),
     };
 
     state = {};
-
-    get id() {
-      return `
-        _${this._reactInternalInstance._mountOrder}
-        _${this._reactInternalInstance._mountIndex}
-      `;
-    }
 
     // react methods
     componentWillMount() {
       this.racerModel = this.context.racerModel;
 
-      this.scopedModel = this.racerModel.at(this.id);
+      this.scopedModel = queryThunk.getScopedModel();
 
       const modelGet = new ModelGet(this.scopedModel);
 
@@ -53,4 +44,8 @@ export default (mapRemoteToProps, mapSelectToProps, mapDispatchToProps) => Child
       )
     }
   };
+
+  return RacerReact;
 }
+
+export default RacerReactWrapper;

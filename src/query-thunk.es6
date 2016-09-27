@@ -1,10 +1,13 @@
 import { pick } from 'lodash';
 import types from './query-types';
 
+let nextId = 1;
+
 export default class QueryThunk {
   constructor() {
     this.flags = {};
     this.queries = {};
+    this.id = `_queryThunk_${nextId++}`;
   }
 
   use(mapRemoteToProps) {
@@ -19,7 +22,7 @@ export default class QueryThunk {
     return this.mapRemoteToProps(this.queryThunk, this.queryDoc);
   }
 
-  queryThunk(graphQlRequest, resetCollection) {
+  queryThunk = (graphQlRequest, resetCollection) => {
     if (typeof graphQlRequest === 'function') {
       return graphQlRequest(this.queryThunk, this.racerModel);
     }
@@ -32,11 +35,11 @@ export default class QueryThunk {
     };
   }
 
-  queryDoc(collection, ids) {
+  queryDoc = (collection, ids) => {
     let query;
 
     if (ids && Array.isArray(ids)) { // await doc('news', [1,2,3])
-      query = ids.map(_id => this.racerModel.query(collection, { _id });
+      query = ids.map(_id => this.racerModel.query(collection, { _id }));
     } else {
       query = this.racerModel.at(collection);
     }
@@ -54,76 +57,106 @@ export default class QueryThunk {
       flags,
     } = this;
 
-    return (collection) => {
-      let queryFunction;
-      let queryResultHandler;
+    const queryFunction = (
+      type === types.SUBSCRIPTION ||
+      (type === types.OBSERVER && flags.onScreen)
+    )
+      ? racerModel.subscribe
+      : racerModel.fetch;
 
-      switch (type) {
-        case types.FETCH:
-          queryFunction = racerModel.fetch;
-        break;
-        case types.SUBSCRIPTION:
-          queryFunction = racerModel.subscribe;
-        break;
-        case types.OBSERVER:
-          queryFunction = flags.onScreen ? racerModel.subscribe : racerModel.fetch;
-        break;
-        default:
-          throw(`Invalid "type" argument - ${type}`);
-      }
-
-      switch (typeof collection) {
-        case 'string': // await query(graphQL, true).as('news');
-          queryResultHandler = (querys) =>
-            pick(querys.get(), [collection]);
-        break;
-        case 'array': // await query(graphQL).as(['news', 'comments']);
-          queryResultHandler = (querys) =>
-            pick(querys.get(), collection);
-        break;
-        case 'function': // await query(graphQL).as(result => resolveResult(result));
-          queryResultHandler = (querys) =>
-            collection.apply(null, querys.get());
-        break;
-        case 'undefined': // await doc('news.1') OR await doc('news', [1,2,3])
-          queryResultHandler = (querys) =>
-            Array.isArray(querys) ? querys.map(query => query.get()) : querys.get();
-        break;
-        default:
-          throw(`Invalid "collection" argument - ${typeof collection}`);
-      }
-
-      return new Promise((resolve, reject) => {
-        queryFunction.apply(racerModel.root, querys, (err) => {
-          if (err) return reject(err);
-          resolve(
-            processResults(
-              type,
-              querys,
-              queryResultHandler,
-              collection,
-              resetCollection
-            )
-          );
-        });
+    return (collection) => new Promise((resolve, reject) => {
+      queryFunction.apply(racerModel.root, querys, (err) => {
+        if (err) return reject(err);
+        resolve(
+          processResults(
+            type,
+            querys,
+            collection,
+            resetCollection
+          )
+        );
       });
+    });
+  }
 
+  processResults(type, querys, collection, resetCollection) {
+    const {
+      queries,
+      mountData,
+    } = this;
+
+    const getData = (query) =>
+      (query.getExtra && query.getExtra())
+      || query.get();
+
+    let queryResult;
+
+    switch (typeof collection) {
+      case 'string': // await query(graphQL, true).as('news');
+        queryResult = pick(getData(querys), [collection]);
+      break;
+      case 'array': // await query(graphQL).as(['news', 'comments']);
+        queryResult = pick(getData(querys), collection);
+      break;
+      case 'function': // await query(graphQL).as(result => resolveResult(result));
+        queryResult = collection.apply(null, getData(querys));
+      break;
+      case 'undefined': // await doc('news.1') OR await doc('news', [1,2,3])
+        queryResult = Array.isArray(querys)
+          ? querys.map(getData)
+          : getData(querys);
+      break;
+      default:
+        throw(`Invalid "collection" argument - ${typeof collection}`);
+    }
+
+    queries[type][collection.toString()] = {
+      type,
+      querys,
+      collection,
+      resetCollection,
+    };
+
+    mountData(queryResult, collection, resetCollection);
+
+    if (type === types.OBSERVER) this.observerSubscribeUpdate();
+  }
+
+  getScopedModel() {
+    return
+      this.scopedModel ||
+      (this.scopedModel = this.racerModel.root.at(this.id));
+  }
+
+  mountData(queryResult, collection, resetCollection) {
+    const scopedModel = this.getScopedModel();
+
+    switch (typeof collection) {
+      case 'string': case 'array':
+        Object.keys(queryResult).forEach(collectionName => {
+          scopedModel.set(collectionName, queryResult[collectionName]);
+        });
+      break;
+      case 'function':
+        // ...
+      break;
+      default:
+        return;
     }
   }
 
-  processResults(type, querys, queryResultHandler, collection, resetCollection) {
-    const {
-      racerModel,
-    } = this;
+  observerSubscribeUpdate() {
+    const action = this.flags.onScreen ? 'subscribe' : 'unsubscribe';
 
-    // сохранение данных запросов
-    // подвешивание слушателей операций над данными подписок
-    // осуществление подписок/отписок для observe по команде из connect-racer
-
+    for(let queryObj in this.queries[types.OBSERVER]) {
+      Array.isArray(queryObj.querys)
+        ? queryObj.querys.map(query => query[action]())
+        : queryObj.querys[action]()
+    }
   }
 
   onScreen(state) {
     this.flags.onScreen = state;
-    // обновление момстоняие подписок по observe
+    this.observerSubscribeUpdate();
   }
 }
