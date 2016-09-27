@@ -50,7 +50,6 @@ export default class QueryThunk {
   queryProcess(type, querys, resetCollection) {
     const {
       racerModel,
-      observeHandler,
       processResults,
       flags,
     } = this;
