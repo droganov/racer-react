@@ -125,5 +125,6 @@ export default class QueryThunk {
 
   onScreen(state) {
     this.flags.onScreen = state;
+    // обновление момстоняие подписок по observe
   }
 }
