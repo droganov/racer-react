@@ -18,14 +18,19 @@ export default (options, cb) => {
   match(options, (err, redirectLocation, renderProps) => {
     //  errors and redirects
     if (err || redirectLocation || !renderProps) {
-      return cb(err, redirectLocation);
+      cb(err, redirectLocation);
+      return;
     }
 
-    return Promise.all(
-      renderProps.components
-        .filter(component => component.statics.mapRemoteToProps === 'function'))
-        .map(component => component.statics.mapRemoteToProps(racerModel) );
-    ).then(() => cb()).catch(cb);
-
+    Promise
+      .all(
+        renderProps.components
+          .filter(component => component.statics.mapRemoteToProps === 'function')
+          .map(component => component.statics.mapRemoteToProps(racerModel, renderProps));
+        )
+      .then(
+        () => cb(null, null, renderProps)
+      )
+      .catch(cb);
   });
 };
