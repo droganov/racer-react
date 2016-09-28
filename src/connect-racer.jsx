@@ -6,38 +6,25 @@ import ModelGet from './model-get';
 
 
 const RacerReactWrapper = (mapRemoteToProps, mapSelectToProps, mapDispatchToProps) => Child => {
-  const queryStore = new QueryStore().use(mapRemoteToProps);
+  const remote = new Remote(mapRemoteToProps);
 
   class RacerReact extends Component {
     static displayName = 'RacerReact';
-
     static statics = {
       mapRemoteToProps: (racerModel, renderProps) =>
         queryStore.with(racerModel, renderProps)
     };
-
-    state = {};
-
-    // react methods
-    componentWillMount() {
-      this.racerModel = this.context.racerModel;
-
-      this.scopedModel = queryThunk.getScopedModel();
-
-      const modelGet = new ModelGet(this.scopedModel);
-
+    componentDidMount() {
+      remote.onCange(
+        () => this.forceUpdate()
+      )
     }
-    componentDidMount() {}
-    componentWillUpdate() {}
-    componentWillUnmount() {}
 
     render() {
       return (
         <Child
           ref="self"
-          {...this.props}
-          {...this.state}
-          racerModel={this.scopedModel}
+          {...remote.props}
           {...mapDispatchToProps && mapDispatchToProps(this.dispatch, this.props)}
         />
       )
