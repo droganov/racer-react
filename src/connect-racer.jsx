@@ -1,19 +1,18 @@
 import React, { Component } from 'react';
 
-import QueryStore from './query-store';
-import DocHandler from './doc-handler';
+import Remote from './query-remote';
 import ModelGet from './model-get';
 
 
 const RacerReactWrapper = (mapRemoteToProps, mapSelectToProps, mapDispatchToProps) => Child => {
-  const queryStore = new QueryStore().use(mapRemoteToProps);
+  const remote = new Remote(mapRemoteToProps);
 
   class RacerReact extends Component {
     static displayName = 'RacerReact';
 
     static statics = {
       mapRemoteToProps: (racerModel, renderProps) =>
-        queryStore.with(racerModel, renderProps)
+        remote.with(racerModel, renderProps)
     };
 
     state = {};
@@ -22,7 +21,7 @@ const RacerReactWrapper = (mapRemoteToProps, mapSelectToProps, mapDispatchToProp
     componentWillMount() {
       this.racerModel = this.context.racerModel;
 
-      this.scopedModel = QueryStore.getScopedModel();
+      this.scopedModel = remote.getScopedModel();
 
       const modelGet = new ModelGet(this.scopedModel);
 
