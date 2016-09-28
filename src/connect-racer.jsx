@@ -22,7 +22,7 @@ const RacerReactWrapper = (mapRemoteToProps, mapSelectToProps, mapDispatchToProp
     componentWillMount() {
       this.racerModel = this.context.racerModel;
 
-      this.scopedModel = queryThunk.getScopedModel();
+      this.scopedModel = QueryStore.getScopedModel();
 
       const modelGet = new ModelGet(this.scopedModel);
 

@@ -31,5 +31,10 @@ export default class QueryStore {
       ).then();
   }
 
+  getScopedModel() {
+    return this.scopedModel ||
+      (this.scopedModel = this.racerModel.at(this.id));
+  }
+
 
 }
