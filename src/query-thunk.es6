@@ -18,27 +18,12 @@ const query = (queryStore) => (graphQlRequest, resetCollection) => {
     type,
     collection,
     resetCollection,
-  });
+  }).then(parseQueryResults);
 
   return {
     fetchAs: exec(types.FETCH),
     subscribeAs: exec(types.SUBSCRIPTION),
     observeAs: exec(types.OBSERVER),
-  };
-}
-
-export const createDocQuery = (queryStore) => (expression, ids) => {
-  let racerQuery;
-
-  if (ids && Array.isArray(ids)) { // await doc('news', [1,2,3])
-    racerQuery = ids.map(_id => this.racerModel.query(expression, { _id }));
-  } else {
-    racerQuery = this.racerModel.at(expression);
-  }
-
-  return {
-    subscribe: queryDocProcess( types.SUBSCRIPTION, racerQuery,  ),
-    observe: queryDocProcess( types.OBSERVER, racerQuery ),
   };
 }
 
@@ -53,15 +38,12 @@ const executeQuery = queryObj => {
   return new Promise((resolve, reject) => {
     racerModel.root[queryFunctionName](racerQuery, (err) => {
       if (err) return reject(err);
-      resolve({
-        ...queryObj
-        results: parseResults(queryObj)
-      });
+      resolve();
     });
   });
 }
 
-const parseResults = (queryObj) => {
+const parseQueryResults = (queryObj) => {
   const {
     type,
     racerQuery,
@@ -72,21 +54,45 @@ const parseResults = (queryObj) => {
     (query.getExtra && query.getExtra())
     || query.get();
 
-  let queryResult;
-
   switch (typeof collection) {
     case 'string': // await query(graphQL, true).as('news');
-      queryResult = pick(getQueryData(racerQuery), [collection]);
+      return pick(getQueryData(racerQuery), [collection]);
     break;
     case 'array': // await query(graphQL).as(['news', 'comments']);
-      queryResult = pick(getQueryData(racerQuery), collection);
+      return pick(getQueryData(racerQuery), collection);
     break;
     case 'function': // await query(graphQL).as(result => resolveResult(result));
-      queryResult = collection.apply(null, getQueryData(racerQuery));
+      return collection.apply(null, getQueryData(racerQuery));
     break;
-    default:
-      throw(`Invalid "collection" argument - ${typeof collection}`);
   }
 
-  return queryResult;
+  throw(`Invalid "collection" argument - ${typeof collection}`);
+}
+
+export const createDocQuery = (queryStore) => (expression, ids) => {
+  let racerQuery;
+
+  if (ids && Array.isArray(ids)) { // await doc('news', [1,2,3])
+    racerQuery = ids.map(_id => this.racerModel.query(expression, { _id }));
+  } else {
+    racerQuery = this.racerModel.at(expression);
+  }
+
+  const exec = type => executeQuery({
+    racerQuery,
+    type,
+  }).then(parseDocQueryResults);
+
+  return {
+    subscribe: exec(types.SUBSCRIPTION),
+    observe: exec(types.OBSERVER),
+  };
+}
+
+const parseDocQueryResults = (queryObj) => {
+  const { racerQuery } = queryObj;
+
+  return Array.isArray(racerQuery)
+    ? racerQuery.map(rq => rq.get())
+    : racerQuery.get();
 }
