@@ -1,20 +1,19 @@
 import React, { Component } from 'react';
 
-import QueryThunk from './query-thunk';
+import QueryStore from './query-store';
 import DocHandler from './doc-handler';
 import ModelGet from './model-get';
 
 
 const RacerReactWrapper = (mapRemoteToProps, mapSelectToProps, mapDispatchToProps) => Child => {
-  const queryThunk = new QueryThunk();
+  const queryStore = new QueryStore().use(mapRemoteToProps);
 
   class RacerReact extends Component {
     static displayName = 'RacerReact';
 
     static statics = {
-      mapRemoteToProps: racerModel => queryThunk
-        .use(mapRemoteToProps)
-        .with(racerModel),
+      mapRemoteToProps: (racerModel, renderProps) =>
+        queryStore.with(racerModel, renderProps)
     };
 
     state = {};

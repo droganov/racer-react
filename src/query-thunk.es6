@@ -1,162 +1,92 @@
 import { pick } from 'lodash';
 import types from './query-types';
 
-let nextId = 1;
+export const createQueryThunk = (queryStore) => {
+  const queryAction = query(queryStore);
 
-export default class QueryThunk {
-  constructor() {
-    this.flags = {};
-    this.queries = {};
-    this.id = `_queryThunk_${nextId++}`;
+  (queryObject, resetCollection) =>
+      typeof(queryObject) === 'function'
+        ? queryObject(queryAction)
+        : queryAction(queryObject, resetCollection);
+}
+
+const query = (queryStore) => (graphQlRequest, resetCollection) => {
+  const racerQuery = queryStore.racerModel.graphQlQuery(graphQlRequest);
+
+  const exec = type => collection => executeQuery({
+    racerQuery,
+    type,
+    collection,
+    resetCollection,
+  });
+
+  return {
+    fetchAs: exec(types.FETCH),
+    subscribeAs: exec(types.SUBSCRIPTION),
+    observeAs: exec(types.OBSERVER),
+  };
+}
+
+export const createDocQuery = (queryStore) => (expression, ids) => {
+  let racerQuery;
+
+  if (ids && Array.isArray(ids)) { // await doc('news', [1,2,3])
+    racerQuery = ids.map(_id => this.racerModel.query(expression, { _id }));
+  } else {
+    racerQuery = this.racerModel.at(expression);
   }
 
-  use(mapRemoteToProps) {
-    this.mapRemoteToProps = mapRemoteToProps;
-    return this;
-  }
+  return {
+    subscribe: queryDocProcess( types.SUBSCRIPTION, racerQuery,  ),
+    observe: queryDocProcess( types.OBSERVER, racerQuery ),
+  };
+}
 
-  with(racerModel) {
-    this.racerModel = racerModel;
-    if (!this.mapRemoteToProps) throw("mapRemoteToProps is undefined");
+const executeQuery = queryObj => {
+  const {
+    type,
+    racerQuery,
+  } = queryObj;
 
-    return this.mapRemoteToProps(this.queryThunk, this.queryDoc);
-  }
+  const queryFunctionName = type === types.SUBSCRIPTION ? "subscribe" : "fetch";
 
-  queryThunk = (graphQlRequest, resetCollection) => {
-    if (typeof graphQlRequest === 'function') {
-      return graphQlRequest(this.queryThunk, this.racerModel);
-    }
-
-    const query = this.racerModel.graphQlQuery(graphQlRequest);
-
-    return {
-      fetchAs: this.queryProcess( types.FETCH, query, resetCollection ),
-      observeAs: this.queryProcess( types.OBSERVER, query, resetCollection ),
-    };
-  }
-
-  queryDoc = (collection, ids) => {
-    let query;
-
-    if (ids && Array.isArray(ids)) { // await doc('news', [1,2,3])
-      query = ids.map(_id => this.racerModel.query(collection, { _id }));
-    } else {
-      query = this.racerModel.at(collection);
-    }
-
-    return {
-      subscribe: this.queryProcess( types.SUBSCRIPTION, query ),
-      observe: this.queryProcess( types.OBSERVER, query ),
-    };
-  }
-
-  queryProcess(type, querys, resetCollection) {
-    const {
-      racerModel,
-      processResults,
-      flags,
-    } = this;
-
-    const queryFunction = (
-      type === types.SUBSCRIPTION ||
-      (type === types.OBSERVER && flags.onScreen)
-    )
-      ? racerModel.subscribe
-      : racerModel.fetch;
-
-    return (collection) => new Promise((resolve, reject) => {
-      queryFunction.apply(racerModel.root, querys, (err) => {
-        if (err) return reject(err);
-        resolve(
-          processResults(
-            type,
-            querys,
-            collection,
-            resetCollection
-          )
-        );
+  return new Promise((resolve, reject) => {
+    racerModel.root[queryFunctionName](racerQuery, (err) => {
+      if (err) return reject(err);
+      resolve({
+        ...queryObj
+        results: parseResults(queryObj)
       });
     });
+  });
+}
+
+const parseResults = (queryObj) => {
+  const {
+    type,
+    racerQuery,
+    collection,
+  } = queryObj;
+
+  const getQueryData = (query) =>
+    (query.getExtra && query.getExtra())
+    || query.get();
+
+  let queryResult;
+
+  switch (typeof collection) {
+    case 'string': // await query(graphQL, true).as('news');
+      queryResult = pick(getQueryData(racerQuery), [collection]);
+    break;
+    case 'array': // await query(graphQL).as(['news', 'comments']);
+      queryResult = pick(getQueryData(racerQuery), collection);
+    break;
+    case 'function': // await query(graphQL).as(result => resolveResult(result));
+      queryResult = collection.apply(null, getQueryData(racerQuery));
+    break;
+    default:
+      throw(`Invalid "collection" argument - ${typeof collection}`);
   }
 
-  processResults(type, querys, collection, resetCollection) {
-    const {
-      queries,
-      mountData,
-    } = this;
-
-    const getData = (query) =>
-      (query.getExtra && query.getExtra())
-      || query.get();
-
-    let queryResult;
-
-    switch (typeof collection) {
-      case 'string': // await query(graphQL, true).as('news');
-        queryResult = pick(getData(querys), [collection]);
-      break;
-      case 'array': // await query(graphQL).as(['news', 'comments']);
-        queryResult = pick(getData(querys), collection);
-      break;
-      case 'function': // await query(graphQL).as(result => resolveResult(result));
-        queryResult = collection.apply(null, getData(querys));
-      break;
-      case 'undefined': // await doc('news.1') OR await doc('news', [1,2,3])
-        queryResult = Array.isArray(querys)
-          ? querys.map(getData)
-          : getData(querys);
-      break;
-      default:
-        throw(`Invalid "collection" argument - ${typeof collection}`);
-    }
-
-    queries[type][collection.toString()] = {
-      type,
-      querys,
-      collection,
-      resetCollection,
-    };
-
-    mountData(queryResult, collection, resetCollection);
-
-    if (type === types.OBSERVER) this.observerSubscribeUpdate();
-  }
-
-  getScopedModel() {
-    return
-      this.scopedModel ||
-      (this.scopedModel = this.racerModel.root.at(this.id));
-  }
-
-  mountData(queryResult, collection, resetCollection) {
-    const scopedModel = this.getScopedModel();
-
-    switch (typeof collection) {
-      case 'string': case 'array':
-        Object.keys(queryResult).forEach(collectionName => {
-          scopedModel.set(collectionName, queryResult[collectionName]);
-        });
-      break;
-      case 'function':
-        // ...
-      break;
-      default:
-        return;
-    }
-  }
-
-  observerSubscribeUpdate() {
-    const action = this.flags.onScreen ? 'subscribe' : 'unsubscribe';
-
-    for(let queryObj in this.queries[types.OBSERVER]) {
-      Array.isArray(queryObj.querys)
-        ? queryObj.querys.map(query => query[action]())
-        : queryObj.querys[action]()
-    }
-  }
-
-  onScreen(state) {
-    this.flags.onScreen = state;
-    this.observerSubscribeUpdate();
-  }
+  return queryResult;
 }
