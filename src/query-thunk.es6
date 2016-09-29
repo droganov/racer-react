@@ -1,24 +1,19 @@
 import { pick } from 'lodash';
 import types from './query-types';
 
-export const createQueryThunk = (queryStore) => {
-  const queryAction = query(queryStore);
-
-  (queryObject, resetCollection) =>
-      typeof(queryObject) === 'function'
-        ? queryObject(queryAction)
-        : queryAction(queryObject, resetCollection);
-}
-
-const query = (queryStore) => (graphQlRequest, resetCollection) => {
-  const racerQuery = queryStore.racerModel.graphQlQuery(graphQlRequest);
+// internal
+const query = remote => (graphQlRequest, resetCollection) => {
+  const racerQuery = remote.racerModel.graphQlQuery(graphQlRequest);
 
   const exec = type => collection => executeQuery({
     racerQuery,
     type,
     collection,
     resetCollection,
-  }).then(parseQueryResults);
+    remote,
+  })
+  .then(attachResults(getQueryResults))
+  .then(mountQueryToRemote);
 
   return {
     fetchAs: exec(types.FETCH),
@@ -31,68 +26,108 @@ const executeQuery = queryObj => {
   const {
     type,
     racerQuery,
+    remote,
   } = queryObj;
 
   const queryFunctionName = type === types.SUBSCRIPTION ? "subscribe" : "fetch";
 
-  return new Promise((resolve, reject) => {
-    racerModel.root[queryFunctionName](racerQuery, (err) => {
+  const queryPromise = new Promise((resolve, reject) => {
+    remote.racerModel[queryFunctionName](racerQuery, (err) => {
       if (err) return reject(err);
       resolve();
     });
   });
+
+  remote.handleQueryPromise(queryPromise); // сообщаем в remote что нужно ждать этот query
+
+  return queryPromise;
 }
 
-const parseQueryResults = (queryObj) => {
+const attachResults = getResultFunction => queryObj => {
+  queryObj.queryResult = getResultFunction.bind(null, queryObj);
+  return queryObj;
+}
+
+const getQueryResults = queryObj => {
   const {
     type,
     racerQuery,
     collection,
+    remote,
   } = queryObj;
 
   const getQueryData = (query) =>
     (query.getExtra && query.getExtra())
     || query.get();
 
+  let queryResult;
+
   switch (typeof collection) {
     case 'string': // await query(graphQL, true).as('news');
-      return pick(getQueryData(racerQuery), [collection]);
+      queryResult = pick(getQueryData(racerQuery), [collection]);
     break;
     case 'array': // await query(graphQL).as(['news', 'comments']);
-      return pick(getQueryData(racerQuery), collection);
+      queryResult = pick(getQueryData(racerQuery), collection);
     break;
     case 'function': // await query(graphQL).as(result => resolveResult(result));
-      return collection.apply(null, getQueryData(racerQuery));
+      queryResult = collection.apply(null, getQueryData(racerQuery));
     break;
+    default:
+      throw(`Invalid "collection" argument - ${typeof collection}`);
   }
 
-  throw(`Invalid "collection" argument - ${typeof collection}`);
+  return queryResult;
 }
 
-export const createDocQuery = (queryStore) => (expression, ids) => {
+const getDocQueryResults = queryObj => {
+  const {
+    racerQuery,
+    remote,
+  } = queryObj;
+
+  const queryResult = Array.isArray(racerQuery)
+    ? racerQuery.map(rq => rq.get())  // doc('news',[1,2,3])
+    : racerQuery.get();               // doc('news.1')
+
+  return queryResult;
+}
+
+const mountQueryToRemote = queryObj => {
+  const { remote } = queryObj;
+  remote.mountQuery(queryObj);
+}
+
+// exports
+export const createQueryThunk = remote => {
+  const queryAction = query(remote);
+
+  (queryObject, resetCollection) =>
+      typeof(queryObject) === 'function'
+        ? queryObject(queryAction)
+        : queryAction(queryObject, resetCollection);
+}
+
+export const createDocQuery = remote => (expression, ids) => {
   let racerQuery;
 
   if (ids && Array.isArray(ids)) { // await doc('news', [1,2,3])
-    racerQuery = ids.map(_id => this.racerModel.query(expression, { _id }));
+    racerQuery = ids.map(_id => remote.racerModel.at(`${expression}.${_id}`));
   } else {
-    racerQuery = this.racerModel.at(expression);
+    racerQuery = remote.racerModel.at(expression);
   }
 
   const exec = type => executeQuery({
     racerQuery,
     type,
-  }).then(parseDocQueryResults);
+    expression,
+    ids,
+    remote,
+  })
+  .then(attachResults(getDocQueryResults))
+  .then(mountQueryToRemote);
 
   return {
     subscribe: exec(types.SUBSCRIPTION),
     observe: exec(types.OBSERVER),
   };
-}
-
-const parseDocQueryResults = (queryObj) => {
-  const { racerQuery } = queryObj;
-
-  return Array.isArray(racerQuery)
-    ? racerQuery.map(rq => rq.get())
-    : racerQuery.get();
 }
