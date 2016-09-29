@@ -53,7 +53,7 @@ export default class QueryRemote {
       updateQueriesData,
       onChangeCallbak,
      } = this;
-     
+
     updateQueriesData();
     onChangeCallbak && onChangeCallbak();
   }
@@ -169,10 +169,11 @@ export default class QueryRemote {
     }
   }
   changeSubscribeObservers(method) {
-    this.racerModel[method](this.observers
-      .filter(queryObj => queryObj.type === types.OBSERVER)
-      .map(queryObj => queryObj.racerQuery)
-      .reduce((allObservers, queryObj) => allObservers.concat(queryObj.racerQuery), []);
+    this.racerModel[method](
+      this.observers
+        .filter(queryObj => queryObj.type === types.OBSERVER)
+        .map(queryObj => queryObj.racerQuery)
+        .reduce((allObservers, queryObj) => allObservers.concat(queryObj.racerQuery), [])
     );
   }
   subscribeObservers() {

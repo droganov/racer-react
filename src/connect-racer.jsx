@@ -19,7 +19,7 @@ const RacerReactWrapper = (mapRemoteToProps, mapSelectToProps, mapDispatchToProp
       const elementBottom = elementTop + domNode.offsetHeight;
 
       return !(( windowBottom < elementTop) || (windowTop > elementBottom));
-    },
+    }
 
     checkOnscreen() {
       const isOnscreen = this.isOnscreen();
