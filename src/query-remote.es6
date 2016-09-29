@@ -6,8 +6,6 @@ let nextId = 1;
 
 export default class QueryRemote {
   constructor(mapRemoteToProps) {
-    if(typeof mapRemoteToProps !== 'function') throw("mapRemoteToProps is not function!");
-
     this.id = `_remote_${nextId++}`;
     this.flags = {};
 
@@ -19,6 +17,8 @@ export default class QueryRemote {
 
   // общий интерфейс
   fetch = (racerModel, renderProps) => {
+    if(typeof this.mapRemoteToProps !== 'function') return;
+
     const remote = this;
 
     remote.queryPromises = [];
