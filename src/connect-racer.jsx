@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 
-import Remote from './query-remote';
+import Remote from './remote';
 
 const RacerReactWrapper = (mapRemoteToProps, mapSelectToProps, mapDispatchToProps) => Child => {
   const remote = new Remote(mapRemoteToProps);
