@@ -57,7 +57,7 @@ export default class QueryRemote {
     updateQueriesData();
     onChangeCallbak && onChangeCallbak();
   }
-  props() {
+  get props {
     return {
       ...this.getData(),
       ...this.functionsProps,

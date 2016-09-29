@@ -21,7 +21,7 @@ const RacerReactWrapper = (mapRemoteToProps, mapSelectToProps, mapDispatchToProp
       return (
         <Child
           ref="self"
-          {...remote.props()}
+          {...remote.props}
           {...mapDispatchToProps && mapDispatchToProps(this.dispatch, this.props)}
         />
       )
