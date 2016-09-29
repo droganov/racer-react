@@ -101,7 +101,7 @@ const mountQueryToRemote = queryObj => {
 export const createQueryThunk = remote => {
   const queryAction = query(remote);
 
-  (queryObject, resetCollection) =>
+  return (queryObject, resetCollection) =>
       typeof(queryObject) === 'function'
         ? queryObject(queryAction)
         : queryAction(queryObject, resetCollection);

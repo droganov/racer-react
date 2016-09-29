@@ -18,7 +18,7 @@ export default class QueryRemote {
   }
 
   // общий интерфейс
-  fetch(racerModel, renderProps) {
+  fetch = (racerModel, renderProps) => {
     const remote = this;
 
     remote.queryPromises = [];
@@ -96,10 +96,7 @@ export default class QueryRemote {
     this.queries.push(queryObj);
   }
   unmountQuery(queryObj) {
-    const {
-      racerQuery,
-      mounted,
-    } = queryObj;
+    const { racerQuery } = queryObj;
 
     const scopedModel = this.getScopedModel();
 
