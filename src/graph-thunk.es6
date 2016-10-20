@@ -44,7 +44,7 @@ export default class GraphThunk {
   }
 
   dispatch = query => ({
-    resolve: resolver =>
+    resolve: resolver => (
       this.aggregator.has(query)
         ?
           Promise.resolve(
@@ -67,7 +67,8 @@ export default class GraphThunk {
                 ? reject(errors)
                 : resolve(this.apply(queryResult, query));
             })
-          ),
+          )
+    ),
   });
 
   thunk = reactProps => query => (

@@ -1,6 +1,6 @@
 {
   "name": "racer-react",
-  "version": "0.0.34",
+  "version": "0.1.01",
   "description": "Racer.js wrapper for React.js which allows to create realtime isomorphic applications with offline support.",
   "main": "lib/index",
   "scripts": {

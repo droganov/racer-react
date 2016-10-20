@@ -57,7 +57,10 @@ export default class DocThunk {
 
     return new Promise((resolve, reject) => {
       racerModel[needSubscribe ? 'subscribe' : 'fetch'](emptyRacerQueries, error => {
-        if (error) return reject(error);
+        if (error) {
+          reject(error);
+          return;
+        }
 
         addListeners(allRacerQueries, updatesTrigger);
         resolve(updatesTrigger());
@@ -67,13 +70,15 @@ export default class DocThunk {
 
   isMultiDocs = ids => ids && Array.isArray(ids);
 
-  makeRacerQueries = (path, ids) =>
+  makeRacerQueries = (path, ids) => (
     this.isMultiDocs(ids)
       ? ids.map(_id => this.racerModel.at(`${path}.${_id}`))
-      : [this.racerModel.at(path)];
+      : [this.racerModel.at(path)]
+  );
 
   isEmptyQuery = query => !query.get();
 
+  // eslint-disable-next-line no-underscore-dangle
   isLocalQuery = query => query._isLocal(query._at.split('.').shift());
 
   getResults = (ids, racerQueries) => {
@@ -95,7 +100,7 @@ export default class DocThunk {
     racerQueries.forEach(query => {
       const queryPath = query.path();
       if (this.listeners[queryPath]) return;
-      this.listeners[queryPath] = query.on('all', "**", updatesTrigger);
+      this.listeners[queryPath] = query.on('all', '**', updatesTrigger);
     });
   }
 
