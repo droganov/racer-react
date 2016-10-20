@@ -1,0 +1,13 @@
+---
+  root: true
+  extends: "airbnb"
+  parser: "babel-eslint"
+  settings:
+    import/resolver:
+      node:
+        extensions:
+          - .js
+          - .es6
+          - .jsx
+  rules:
+    no-unused-expressions: ["error", {"allowShortCircuit": true}]
